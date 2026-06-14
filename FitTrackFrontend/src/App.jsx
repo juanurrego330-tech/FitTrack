@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './App.css'
+const API_URL = import.meta.env.VITE_API_URL;
 
 function App() {
   const [ejercicios, setEjercicios] = useState([])
@@ -10,7 +11,7 @@ function App() {
   const [repeticiones, setRepeticiones] = useState('')
 
   const obtenerEjercicios = () => {
-    fetch('http://localhost:5249/ejercicios')
+    fetch(`${API_URL}/ejercicios`)
       .then(response => response.json())
       .then(data => setEjercicios(data))
       .catch(error => console.error("Error cargando:", error))
@@ -30,7 +31,7 @@ function App() {
       repeticiones: parseInt(repeticiones)
     }
 
-    fetch('http://localhost:5249/ejercicios', {
+    fetch(`${API_URL}/ejercicios`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(nuevo)
@@ -46,7 +47,7 @@ function App() {
     .catch(error => console.error("Error al guardar:", error))
   }
   const eliminarEjercicio = (id) => {
-    fetch(`http://localhost:5249/ejercicios/${id}`, {
+    fetch(`${API_URL}/ejercicios/${id}`, {
       method: 'DELETE'
     })
     .then(response => {
