@@ -13,6 +13,7 @@ appsettings.Development.json
 # Variables de entorno
 .env
 .env.*
+.env.production
 !.env.example
 
 # Frontend
