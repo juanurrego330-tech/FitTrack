@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
-var conexion = builder.Configuration.GetConnectionString("CadenaGimnasio");
+var conexion = builder.Configuration.GetConnectionString("CadenaPostgres");
 builder.Services.AddDbContext<GimnasioContext>(options => options.UseNpgsql(conexion));
 
 // Add services to the container.
