@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
-var conexion = builder.Configuration.GetConnectionString("CadenaGimnasio");
+var conexion = builder.Configuration.GetConnectionString("CadenaPostgres");
 builder.Services.AddDbContext<GimnasioContext>(options => options.UseNpgsql(conexion));
 
 // Add services to the container.
@@ -39,5 +39,22 @@ app.MapDelete("/ejercicios/{id}", async (GimnasioContext db, int id) =>
     await db.SaveChangesAsync();
     return Results.NoContent();
 });
-
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<GimnasioContext>();
+        // Verifica si hay migraciones pendientes en el código que no existan en Render
+        if (context.Database.GetPendingMigrations().Any())
+        {
+            context.Database.Migrate();
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Error crítico: No se pudieron aplicar las migraciones en el arranque.");
+    }
+}
 app.Run();
