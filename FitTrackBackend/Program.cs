@@ -17,7 +17,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.MapGet("/ejercicios", async (int? usuarioId, GimnasioContext context) =>
 {
