@@ -87,7 +87,7 @@ function App() {
       <h1>FitTrack</h1>
       {/* Barra superior de bienvenida y cierre de sesión */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid #ccc' }}>
-        <h1 style={{ margin: 0 }}>FitTrack</h1>
+        <h1 style={{ margin: 0 }}></h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <span>Hola, <strong>{usuario.nombre}</strong> 👋</span>
           <button onClick={handleCerrarSesion} className="btn-eliminar" style={{ fontSize: '0.85em', padding: '5px 10px', borderRadius: '4px' }}>
