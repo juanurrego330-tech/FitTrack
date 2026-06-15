@@ -19,15 +19,32 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/ejercicios", async (GimnasioContext db) =>
+app.MapGet("/ejercicios", async (int? usuarioId, GimnasioContext context) =>
 {
-    return await db.ejercicios.ToListAsync();
+    if (usuarioId == null)
+    {
+        return Results.BadRequest(new { mensaje = "Es necesario el usuarioId para cargar las rutinas." });
+    }
+
+    // Corregido: Filtra por el dueño del ejercicio
+    var misEjercicios = await context.ejercicios
+        .Where(e => e.usuario_id == usuarioId)
+        .ToListAsync();
+
+    return Results.Ok(misEjercicios);
 });
 
-app.MapPost("/ejercicios", async (GimnasioContext db, Ejercicio nuevoEjercicio) =>
+app.MapPost("/ejercicios", async (Ejercicio nuevoEjercicio, GimnasioContext context) =>
 {
-    db.ejercicios.Add(nuevoEjercicio);
-    await db.SaveChangesAsync();
+    // Corregido: Valida que el JSON traiga el usuario_id de quien entrena
+    if (nuevoEjercicio.usuario_id == null || nuevoEjercicio.usuario_id == 0)
+    {
+        return Results.BadRequest(new { mensaje = "El ejercicio debe tener un usuario asignado." });
+    }
+
+    context.ejercicios.Add(nuevoEjercicio);
+    await context.SaveChangesAsync();
+
     return Results.Created($"/ejercicios/{nuevoEjercicio.id}", nuevoEjercicio);
 });
 
@@ -39,6 +56,64 @@ app.MapDelete("/ejercicios/{id}", async (GimnasioContext db, int id) =>
     await db.SaveChangesAsync();
     return Results.NoContent();
 });
+
+app.MapPost("/api/auth/register", async (UsuarioRegistroDto dto, GimnasioContext context) =>
+{
+    if (string.IsNullOrEmpty(dto.correo) || string.IsNullOrEmpty(dto.password))
+    {
+        return Results.BadRequest(new { mensaje = "El correo y la contraseña son obligatorios." });
+    }
+
+    bool existe = await context.usuarios.AnyAsync(u => u.correo == dto.correo);
+    if (existe)
+    {
+        return Results.BadRequest(new { mensaje = "El correo ya está registrado." });
+    }
+
+    // Encriptamos la contraseña con BCrypt antes de guardarla
+    string hash = BCrypt.Net.BCrypt.HashPassword(dto.password);
+
+    var nuevoUsuario = new Usuario
+    {
+        nombre = dto.nombre,
+        correo = dto.correo,
+        password_hash = hash
+    };
+
+    context.usuarios.Add(nuevoUsuario);
+    await context.SaveChangesAsync();
+
+    return Results.Ok(new { mensaje = "Usuario registrado con éxito", id = nuevoUsuario.id });
+});
+
+app.MapPost("/api/auth/login", async (UsuarioLoginDto dto, GimnasioContext context) =>
+{
+    if (string.IsNullOrEmpty(dto.correo) || string.IsNullOrEmpty(dto.password))
+    {
+        return Results.BadRequest(new { mensaje = "El correo y la contraseña son obligatorios." });
+    }
+
+    var usuario = await context.usuarios.FirstOrDefaultAsync(u => u.correo == dto.correo);
+    if (usuario == null)
+    {
+        return Results.BadRequest(new { mensaje = "Correo o contraseña incorrectos." });
+    }
+
+    // Verificamos si la contraseña coincide con el hash guardado
+    bool passwordValido = BCrypt.Net.BCrypt.Verify(dto.password, usuario.password_hash);
+    if (!passwordValido)
+    {
+        return Results.BadRequest(new { mensaje = "Correo o contraseña incorrectos." });
+    }
+
+    return Results.Ok(new { 
+        mensaje = "Inicio de sesión exitoso", 
+        usuarioId = usuario.id,
+        nombre = usuario.nombre,
+        correo = usuario.correo
+    });
+});
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

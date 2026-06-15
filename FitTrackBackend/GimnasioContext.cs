@@ -6,4 +6,5 @@ public class GimnasioContext : DbContext
     {
     }
     public DbSet<Ejercicio> ejercicios { get; set; }
+    public DbSet<Usuario> usuarios { get; set; }
 }

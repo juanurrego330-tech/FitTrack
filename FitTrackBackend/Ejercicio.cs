@@ -5,4 +5,5 @@ public class Ejercicio
     public string musculo { get; set; } = string.Empty;
     public int series { get; set; }
     public int repeticiones { get; set; }
+    public int? usuario_id { get; set; }
 }
